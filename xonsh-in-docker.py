@@ -15,6 +15,7 @@ parser.add_argument("--ptk", "-t", default="2.0.4", metavar="ptk_version")
 parser.add_argument("--keep", action="store_true")
 parser.add_argument("--build", action="store_true")
 parser.add_argument("--command", "-c", default="xonsh", metavar="command")
+parser.add_argument("--test", action="store_true")
 
 args = parser.parse_args()
 
@@ -46,14 +47,17 @@ RUN pypy3 setup.py install
         python_version=args.pypy, ptk_version=args.ptk
     )
 
+if args.test:
+    docker_script += """
+RUN pip install --upgrade pip && pip install -r requirements-tests.txt
+"""
+
 print("Building and running Xonsh")
 print("Using python ", args.python)
 print("Using prompt-toolkit ", args.ptk)
 
 with open("./Dockerfile", "w+") as f:
     f.write(docker_script)
-
-env_string = " ".join(args.env)
 
 subprocess.call(["docker", "build", "-t", "xonsh", "."])
 os.remove("./Dockerfile")
