@@ -12,47 +12,14 @@ from xonsh.platform import ON_WINDOWS
 from xonsh.lib.os import indir
 
 from tools import (
+    skip_if_not_in_path,
     skip_if_on_windows,
     skip_if_on_darwin,
     skip_if_on_travis,
     ON_WINDOWS,
     ON_DARWIN,
     ON_TRAVIS,
-)
-
-
-XONSH_PREFIX = xonsh.__file__
-if "site-packages" in XONSH_PREFIX:
-    # must be installed version of xonsh
-    num_up = 5
-else:
-    # must be in source dir
-    num_up = 2
-for i in range(num_up):
-    XONSH_PREFIX = os.path.dirname(XONSH_PREFIX)
-PATH = (
-    os.path.join(os.path.dirname(__file__), "bin")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "bin")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "Scripts")
-    + os.pathsep
-    + os.path.join(XONSH_PREFIX, "scripts")
-    + os.pathsep
-    + os.path.dirname(sys.executable)
-    + os.pathsep
-    + os.environ["PATH"]
-)
-
-
-skip_if_no_xonsh = pytest.mark.skipif(
-    shutil.which("xonsh", path=PATH) is None, reason="xonsh not on PATH"
-)
-skip_if_no_make = pytest.mark.skipif(
-    shutil.which("make", path=PATH) is None, reason="make command not on PATH"
-)
-skip_if_no_sleep = pytest.mark.skipif(
-    shutil.which("sleep", path=PATH) is None, reason="sleep command not on PATH"
+    PATH,
 )
 
 
@@ -481,9 +448,9 @@ def test_redirect_out_to_file(cmd, exp, tmpdir):
     assert content == exp
 
 
-@skip_if_no_make
-@skip_if_no_xonsh
-@skip_if_no_sleep
+@skip_if_not_in_path('make')
+@skip_if_not_in_path('xonsh')
+@skip_if_not_in_path('sleep')
 @skip_if_on_windows
 def test_xonsh_no_close_fds():
     # see issue https://github.com/xonsh/xonsh/issues/2984

@@ -8,11 +8,13 @@ import builtins
 import platform
 import subprocess
 import contextlib
+import shutil
 from collections import defaultdict
 from collections.abc import MutableMapping
 
 import pytest
 
+import xonsh
 from xonsh.environ import Env
 from xonsh.base_shell import BaseShell
 from xonsh.platform import ptk_version_info
@@ -34,6 +36,28 @@ ON_AZURE_PIPELINES = os.environ.get("TF_BUILD", "") == "True"
 print("ON_AZURE_PIPELINES", repr(ON_AZURE_PIPELINES))
 print("os.environ['TF_BUILD']", repr(os.environ.get("TF_BUILD", "")))
 TEST_DIR = os.path.dirname(__file__)
+XONSH_PREFIX = xonsh.__file__
+if "site-packages" in XONSH_PREFIX:
+    # must be installed version of xonsh
+    num_up = 5
+else:
+    # must be in source dir
+    num_up = 2
+for i in range(num_up):
+    XONSH_PREFIX = os.path.dirname(XONSH_PREFIX)
+PATH = (
+    os.path.join(os.path.dirname(__file__), "bin")
+    + os.pathsep
+    + os.path.join(XONSH_PREFIX, "bin")
+    + os.pathsep
+    + os.path.join(XONSH_PREFIX, "Scripts")
+    + os.pathsep
+    + os.path.join(XONSH_PREFIX, "scripts")
+    + os.pathsep
+    + os.path.dirname(sys.executable)
+    + os.pathsep
+    + os.environ["PATH"]
+)
 
 # pytest skip decorators
 skip_if_py34 = pytest.mark.skipif(VER_MAJOR_MINOR < VER_3_5, reason="Py3.5+ only test")
@@ -65,6 +89,11 @@ skip_if_lt_ptk2 = pytest.mark.skipif(
     ptk_version_info()[0] < 2, reason="prompt-toolkit <2"
 )
 
+
+def skip_if_not_in_path(bin):
+    return pytest.mark.skipif(
+        shutil.which(bin, path=PATH) is None, reason="{} not on PATH".format(bin)
+    )
 
 def sp(cmd):
     return subprocess.check_output(cmd, universal_newlines=True)

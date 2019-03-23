@@ -104,6 +104,7 @@ def xonsh_events():
 @pytest.fixture
 def xonsh_builtins(monkeypatch, xonsh_events):
     """Mock out most of the builtins xonsh attributes."""
+    print('xonsh_builtins fixture')
     old_builtins = set(dir(builtins))
     execer = getattr(getattr(builtins, "__xonsh__", None), "execer", None)
     session = XonshSession(execer=execer, ctx={})
